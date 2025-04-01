@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tensor Visualization</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #upload-container {
+      padding: 10px;
+      background-color: #f5f5f5;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+    canvas {
+      flex-grow: 1;
+      display: block;
+    }
+    #tooltip {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="upload-container">
+    <input type="file" id="fileInput" accept=".bin">
+  </div>
+  <div style="position: relative;">
+    <canvas id="tensorCanvas"></canvas>
+    <div id="tooltip"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const canvas = document.getElementById('tensorCanvas');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+
+    let processedData = []; // 归一化数据
+    let cols = 0, rows = 0, cellW = 0, cellH = 0; // 计算网格布局
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth - 60;
+      canvas.height = window.innerHeight - document.getElementById('upload-container').offsetHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const arrayBuffer = await file.arrayBuffer();
+      let shape = [];
+      const int32View = new Int32Array(arrayBuffer);
+      let shapeBytes = 0;
+
+      for (let i = 1; i <= 10; i++) {
+        shape = Array.from(int32View.slice(0, i));
+        const total = shape.reduce((a, b) => a * b, 1);
+        if (4 * i + total * 4 === arrayBuffer.byteLength) {
+          shapeBytes = i * 4;
+          break;
+        }
+      }
+
+      if (shapeBytes === 0) {
+        alert("Can't read shape, check the binary file format！");
+        return;
+      }
+
+      const totalElements = shape.reduce((a, b) => a * b, 1);
+      const float32Array = new Float32Array(arrayBuffer, shapeBytes);
+
+      if (float32Array.length !== totalElements) {
+        alert("Data length does not match shape!");
+        return;
+      }
+
+      visualizeTensor(float32Array);
+    });
+
+    function visualizeTensor(data) {
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+ 
+      const maxDisplay = 256;
+      processedData = [];
+      if (data.length <= maxDisplay) {
+        processedData = [...data];
+      } else {
+        const groupSize = Math.ceil(data.length / maxDisplay);
+        for (let i = 0; i < data.length; i += groupSize) {
+          const chunk = data.slice(i, i + groupSize);
+          let maxVal = chunk[0];
+          chunk.forEach(v => {
+            if (Math.abs(v) > Math.abs(maxVal)) {
+              maxVal = v;
+            }
+          });
+          processedData.push(maxVal);
+        }
+      }
+
+      cols = Math.ceil(Math.sqrt(processedData.length));
+      rows = Math.ceil(processedData.length / cols);
+      cellW = width / cols;
+      cellH = height / rows;
+      const maxVal = Math.max(...processedData.map(v => Math.abs(v))) || 1;
+
+      processedData.forEach((val, i) => {
+        const norm = val / maxVal;
+        const intensity = Math.floor(Math.abs(norm) * 255);
+        let color = "#ffffff";
+        if (val > 0) color = `rgb(${intensity},0,0)`;
+        else if (val < 0) color = `rgb(0,0,${intensity})`;
+
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        ctx.fillStyle = color;
+        ctx.fillRect(col * cellW, row * cellH, cellW, cellH);
+      });
+    }
+
+    // 监听鼠标移动事件
+    canvas.addEventListener("mousemove", (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      const colIndex = Math.floor(mouseX / cellW);
+      const rowIndex = Math.floor(mouseY / cellH);
+      const index = rowIndex * cols + colIndex;
+
+      if (index >= 0 && index < processedData.length) {
+        const normValue = processedData[index]; // 归一化后的值
+        tooltip.textContent = `Norm: ${normValue.toFixed(16)}`;
+        tooltip.style.left = `${event.clientX + 10}px`;
+        tooltip.style.top = `${event.clientY + 10}px`;
+        tooltip.style.visibility = "visible";
+      } else {
+        tooltip.style.visibility = "hidden";
+      }
+    });
+
+    // 鼠标移出时隐藏 tooltip
+    canvas.addEventListener("mouseleave", () => {
+      tooltip.style.visibility = "hidden";
+    });
+  </script>
+</body>
+</html>
