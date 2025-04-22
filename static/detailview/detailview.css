@@ -1,0 +1,15 @@
+.detail_menu_div {
+    border: 1px solid gray;
+    width: 95%;
+    margin: 5px;
+    margin-top: 10px;
+    margin-left: 25px;
+    background-color: #dddddd1f;
+    border-radius: 5px;
+}
+
+.overview_label{
+    width: 15%;
+    display: inline-block;
+    margin:5px;
+}
