@@ -6,8 +6,7 @@ function fetch_data(json) {
         data: JSON.stringify(json),
         dataType: 'json',
         success: function (data) {
-            publish('simulation', data.simulation);
-            publish('simulation_info', [data.embedding, data.simulation_info]);
+            publish('data', data)
         }
     });
 }

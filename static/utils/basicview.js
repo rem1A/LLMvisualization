@@ -1,4 +1,4 @@
-export class BasicView {
+class BasicView {
 
     constructor(container) {
       this.container = container;

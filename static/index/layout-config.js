@@ -1,17 +1,21 @@
-export const layoutConfig = {
+let config = {
     content: [{
-      type: 'column',
-      content: [
-        {
-          type: 'component',
-          componentName: 'overview',
-          title: 'Overview'
-        },
-        {
-          type: 'component',
-          componentName: 'detailview',
-          title: 'Detail View'
-        }
-      ]
+        type: 'row',
+        content: [{
+            type: 'column',
+            width: 50,
+            content: [{
+                type: 'component',
+                componentName: 'overview',
+                title: 'Overview'
+            }]
+        },{
+            type: 'column',
+            content: [{
+                type: 'component',
+                componentName: 'detailview',
+                title: 'Detail View'
+            }]
+        }]
     }]
-  };
+};

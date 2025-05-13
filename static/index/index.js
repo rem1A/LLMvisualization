@@ -1,25 +1,36 @@
-import { Overview } from '../overview/overview.js';
-import { DetailView } from '../detailview/detailview.js';
-import { layoutConfig } from './layout-config.js';
 
-let layout = new GoldenLayout(layoutConfig, $('#layout-root'));
+let layout = new GoldenLayout(config);
 
-layout.registerComponent('overview', function (container, state) {
-  $(container.getElement()[0]).load('../static/overview/overview.html', function () {
-    window.overview_view = new Overview(container);
-    window.overview_view.init();
-  });
-});
+let detail_view;
+let overview_view;
 
 layout.registerComponent('detailview', function (container, state) {
-    $(container.getElement()[0]).load('/static/detailview/detailview.html', function () {
-      console.log('✅ detailview.html loaded');
-      const view = new DetailView(container);
-      console.log('✅ DetailView created');
-      view.init();
-      console.log('✅ DetailView initialized');
-      window.detail_view = view;
-    });
-  });
+    $(container.getElement()[0]).load('../static/detailview/detailview.html');
+    detail_view = new DetailView(container);
+});
+
+
+layout.registerComponent('overview', function (container, state) {
+    $(container.getElement()[0]).load('../static/overview/overview.html');
+    overview_view = new Overview(container);
+});
+
+
+layout.on('itemCreated', (item) => {
+    if (item.config.cssClass) {
+        item.element.addClass(item.config.cssClass);
+    }
+});
 
 layout.init();
+
+// define global start function
+function loadData() {
+    let name = $('#simulation').val();
+    if(name == 'none')
+        return;
+
+    fetch_data({'dataset':name});
+}
+
+loadData();

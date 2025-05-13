@@ -6,4 +6,8 @@ class OverviewData
 
     
 
+    update(data){
+        this.data = data;
+    }
+
 }
