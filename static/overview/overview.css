@@ -1,0 +1,20 @@
+.overview-block {
+    transition: background-color 0.2s ease;
+  }
+  
+  .overview-block:hover {
+    background-color: #555 !important;
+  }
+  
+  #overview-tooltip {
+    position: absolute;
+    display: none;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 12px;
+    z-index: 1000;
+  }
+  

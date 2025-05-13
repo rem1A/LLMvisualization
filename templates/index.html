@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LLM Visualization</title>
+
+  <!-- Golden Layout CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/golden-layout/1.5.9/css/goldenlayout-base.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/golden-layout/1.5.9/css/goldenlayout-light-theme.css">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/index/index.css">
+  <link rel="stylesheet" href="/static/overview/overview.css">
+  <link rel="stylesheet" href="/static/detailview/detailview.css">
+</head>
+<body>
+  <!-- Golden Layout 挂载容器 -->
+  <div id="layout-root" style="width: 100vw; height: 100vh;"></div>
+
+  <!-- JS Dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/golden-layout/1.5.9/goldenlayout.min.js"></script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+
+  <!-- 应用入口（必须是 module 类型）-->
+  <script type="module" src="/static/index/index.js"></script>
+</body>
+</html>
