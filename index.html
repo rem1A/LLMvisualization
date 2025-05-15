@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tensor Visualization</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #upload-container {
+      padding: 10px;
+      background-color: #f5f5f5;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+    #main-container {
+      display: flex;
+      max-width: 90vw;
+    }
+    canvas {
+      flex-grow: 0;
+    }
+    .tensor-label {
+      /* transform: translateY(-50%); */
+      position: absolute;
+      left: 820px;
+      font-size: 14px;
+      color: black;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="upload-container">
+    <input type="file" id="fileInput" multiple accept=".bin">
+    <label for="thresholdInput">Threshold：</label>
+    <input type="number" id="thresholdInput" value="0.0001" step="0.00001">
+  </div>
+  <div id="main-container">
+    <div style="position: relative; flex-grow: 1;">
+      <canvas id="tensorCanvas"></canvas>
+      <div id="tooltip"></div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const thresholdInput = document.getElementById('thresholdInput');
+    const canvas = document.getElementById('tensorCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 监听文件变化 & 清除标签
+    fileInput.addEventListener("change", function (event) {
+      clearLabels();
+      processFiles(event.target.files);
+    });
+
+    // 监听阈值输入变化 & 重新处理数据
+    thresholdInput.addEventListener("input", function () {
+      if (fileInput.files.length > 0) {
+        clearLabels();
+        processFiles(fileInput.files);
+      }
+    });
+
+    function processFiles(files) {
+      if (files.length === 0) return;
+
+      const barHeight = 30;
+      const barSpacing = 10;
+      const canvasWidth = 800;
+      const maxBars = files.length;
+      const canvasHeight = maxBars * (barHeight + barSpacing);
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const arrayBuffer = e.target.result;
+          let shape = [];
+          const int32View = new Int32Array(arrayBuffer);
+          let shapeBytes = 0;
+
+          for (let i = 1; i <= 10; i++) {
+            shape = Array.from(int32View.slice(0, i));
+            const total = shape.reduce((a, b) => a * b, 1);
+            if (4 * i + total * 4 === arrayBuffer.byteLength) {
+              shapeBytes = i * 4;
+              break;
+            }
+          }
+
+          if (shapeBytes === 0) {
+            alert("Can't read shape, check the binary file format！");
+            return;
+          }
+
+          const totalElements = shape.reduce((a, b) => a * b, 1);
+          const tensorData = new Float32Array(arrayBuffer, shapeBytes);
+
+          if (tensorData.length !== totalElements) {
+            alert("Data length does not match shape!");
+            return;
+          }
+          drawBar(ctx, totalElements, tensorData, index, canvasWidth, barHeight, barSpacing, file.name);
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function drawBar(ctx, count, data, index, canvasWidth, barHeight, barSpacing, tensorName) {
+      const y = index * (barHeight + barSpacing);
+      const processedData = dataProcessing(data);
+      const maxVal = Math.max(Math.abs(...processedData));
+
+      processedData.forEach((val, i) => {
+        let color = "#ffffff";
+        const intensity = maxVal !== 0 ? Math.floor((val / maxVal) * 255) : 0;
+        color = `rgb(${intensity}, 0, 0)`;
+        ctx.fillStyle = color;
+        ctx.fillRect(i * (canvasWidth / processedData.length), y, (canvasWidth / processedData.length), barHeight);
+      });
+
+      const label = document.createElement("div");
+      label.className = "tensor-label";
+      label.style.top = `${y + barHeight + 15}px`;
+      label.innerText = `${tensorName} (Max: ${maxVal.toFixed(8)})`;
+      document.body.appendChild(label);
+    }
+
+    function dataProcessing(data) {
+      const maxDisplay = 64;
+      const threshold = parseFloat(thresholdInput.value); // 获取用户输入的阈值
+      let processedData = [];
+
+      if (data.length <= maxDisplay) {
+        processedData = [...data];
+      } else {
+        const groupSize = Math.ceil(data.length / maxDisplay);
+        for (let i = 0; i < data.length; i += groupSize) {
+          const chunk = data.slice(i, i + groupSize);
+          let maxChunkVal = chunk[0];
+          chunk.forEach(v => {
+            if (Math.abs(v) > Math.abs(maxChunkVal)) {
+              maxChunkVal = v;
+            }
+          });
+
+          if (Math.abs(maxChunkVal) < threshold) {
+            maxChunkVal = 0; // 小于阈值的数置为 0
+          }
+
+          processedData.push(maxChunkVal);
+        }
+      }
+      return processedData;
+    }
+
+    function clearLabels() {
+      document.querySelectorAll(".tensor-label").forEach(label => label.remove());
+    }
+  </script>
+</body>
+</html>
