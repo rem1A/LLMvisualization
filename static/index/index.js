@@ -32,7 +32,7 @@ function loadData() {
     // let name = $('#simulation').val();
     // if(name == 'none')
     //     return;
-    let name = "ckpt_2-1";
+    let name = "ckpt_test";
     fetch_data({'folder':name});
 }
 

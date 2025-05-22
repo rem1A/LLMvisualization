@@ -1,8 +1,41 @@
 from flask import Flask, render_template, request, jsonify
 from pathlib import Path
 import numpy as np
+import math
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
+
+def data_process(threshold, data_len, bin_data):
+    chunks_num = 64
+    threshold_cnt = 0
+    cnt = 0
+    num_per_chunk = math.ceil(data_len / chunks_num)
+    rate_list = []
+    data_array = np.array(bin_data)
+    max_value = np.max(np.abs(data_array))
+    min_value = np.min(np.abs(data_array))
+    var_value = np.var(data_array)
+    average_value = np.mean(np.abs(data_array))#average of absolute values
+    total_rate = np.sum(np.abs(data_array) >= threshold) / data_len
+    for i in range(data_len):
+        if abs(data_array[i]) >= threshold:
+            threshold_cnt += 1
+        cnt += 1
+        if i == data_len - 1:
+            rate_list.append(threshold_cnt / cnt)
+            break
+        if cnt == num_per_chunk:
+            rate_list.append(threshold_cnt / num_per_chunk)
+            threshold_cnt = 0
+            cnt = 0
+    return {
+        'max': max_value,
+        'min': min_value,
+        'var': var_value,
+        'average': average_value,
+        'rate_list': rate_list,
+        'total_rate': total_rate
+    }
 
 @app.route('/')
 def index():
@@ -23,11 +56,18 @@ def fetch_data():
         with file.open('rb') as f:
             shape = np.fromfile(f, dtype='<i4', count=1)
             data = np.fromfile(f, dtype='<f4', count=shape[0])
+            processed_data = data_process(0.000075, shape[0], data)#TODO: threshold should be passed from the frontend
             result.append({
                 'filename': file.name,
                 'shape': shape.tolist(),
-                # 'data': data.tolist()
-            })
+                'max': float(processed_data['max']),
+                'min': float(processed_data['min']),
+                'var': float(processed_data['var']),
+                'average': float(processed_data['average']),
+                'rate_list': [float(x) for x in processed_data['rate_list']],
+                'total_rate': float(processed_data['total_rate'])
+            })#must be float, otherwise jsonify will not work
     return jsonify(result)
+
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

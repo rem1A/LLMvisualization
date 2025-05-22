@@ -2,6 +2,7 @@ class OverviewData
 {
     constructor() 
     {
+        this.data = [];
     }
 
     
