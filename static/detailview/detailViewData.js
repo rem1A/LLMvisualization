@@ -1,9 +1,14 @@
 class DetailViewData
 {
+    // constructor() 
+    // {
+    //     this.query_index = -1;
+    // }
     constructor() 
     {
-        this.query_index = -1;
+        this.data = [];
     }
-
-       
+        update(data){
+        this.data = data;
+    }
 }

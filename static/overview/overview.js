@@ -16,19 +16,24 @@ class Overview extends BasicView
     init()
     {
         super.init();
-        this.svg = d3.select('#overview_svg')
-                    .append('svg')
-                    .attr('width', this.width)
-                    .attr('height', this.height)
-                    .append('g');
-        
-        //update margin value
+
         this.margin.left = 50;
         this.margin.top = 50;
 
-        this.tooltip = this.svg
+        if(!this.svg){
+            this.svg = d3.select('#overview_svg')
+            .append('svg')
+            .attr('width', this.width)
+            .attr('height', this.height)
+            .append('g');
+        }
+
+        this.svg.selectAll('*').remove(); // 清空 svg 
+
+        this.tooltip = d3.select('#overview_svg')
             .append('div')
             .attr('class', 'tooltip')
+            .style('opacity', 0.8)//透明度
             .style('position', 'absolute')//绝对定位 用于确定tooltip的位置
             .style('visibility', 'hidden')//设置tooltip的可见性 默认不显示 需要的时候再显示
             .style('background', 'white')//背景颜色
@@ -45,26 +50,28 @@ class Overview extends BasicView
       
         this.init();
 
-        //gpt's code: reinitialization
-        this.svg.selectAll('*').remove();
-
         const text = 'Here shows the overview of the tensors, each block represents the difference between the corresponding tensors in the two checkpoints. Click the blocks to see the details of the tensors.';
         overview_view.WrapText(text, this.margin.left - 20, this.margin.top - 20, this.width - this.margin.left - this.margin.right, 1.2);
-        const data = this.dataManager.data;
         const colorScale = d3.scaleLinear()
             .domain([0, 1])
             .range(['#ffffff', '#87cefa']);
+
+        const rectWidth = 20;
+        const rectHeight = 20;
+        const rectSpace = 5;
+
         this.svg.append('g').selectAll('.rect')
             .data(this.dataManager.data)
             .enter()
             .append('rect')
+            .attr('class', 'rect')//gpt: 给每个矩形添加类名 rect 否则无法在后续操作中选择到它们
             .attr('x', (d, i)=>{
-                return i * 30;
+                return i * (rectWidth + rectSpace);
             }
             )
             .attr('y', this.margin.top - 20)
-            .attr('width', 20)
-            .attr('height', 20)
+            .attr('width', rectWidth)
+            .attr('height', rectHeight)
             .attr('fill', d=> colorScale(d.total_rate))//gpt code: use colorScale to set the color
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)//平移
             .on('mouseover', (event, d) => {
@@ -80,8 +87,19 @@ class Overview extends BasicView
             .on('mouseout', (event, d) => {
                 this.tooltip.style('visibility', 'hidden');
                 console.log('mouseout');//test
-            });//鼠标移出时tooltip隐藏
+            })//鼠标移出时tooltip隐藏
+            .on('click', (event, d) => {
+                this.svg.selectAll('.rect')
+                    .attr('stroke', null)
+                    .attr('stroke-width', null);
 
+                d3.select(event.currentTarget)
+                    .attr('stroke', 'red')
+                    .attr('stroke-width', 2);
+                publish('overview_click', d);
+
+                console.log('clicked! rate_list:', d.rate_list);//test
+            });
     }
 
     update(msg, data)
@@ -89,5 +107,5 @@ class Overview extends BasicView
         this.dataManager.update(data);// data come back
         this.draw();
     }
-
+    
 }

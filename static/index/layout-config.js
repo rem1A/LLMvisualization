@@ -1,17 +1,17 @@
 // export const config = {
 let config = {
     content: [{
-        type: 'row',
+        type: 'column',
         content: [{
-            type: 'column',
-            width: 50,
+            type: 'row',
+            height: 25,
             content: [{
                 type: 'component',
                 componentName: 'overview',
                 title: 'Overview'
             }]
         },{
-            type: 'column',
+            type: 'row',
             content: [{
                 type: 'component',
                 componentName: 'detailview',

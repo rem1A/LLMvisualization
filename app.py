@@ -9,7 +9,7 @@ def data_process(threshold, data_len, bin_data):
     chunks_num = 64
     threshold_cnt = 0
     cnt = 0
-    num_per_chunk = math.ceil(data_len / chunks_num)
+    chunk_size = math.ceil(data_len / chunks_num)
     rate_list = []
     data_array = np.array(bin_data)
     max_value = np.max(np.abs(data_array))
@@ -24,8 +24,8 @@ def data_process(threshold, data_len, bin_data):
         if i == data_len - 1:
             rate_list.append(threshold_cnt / cnt)
             break
-        if cnt == num_per_chunk:
-            rate_list.append(threshold_cnt / num_per_chunk)
+        if cnt == chunk_size:
+            rate_list.append(threshold_cnt / chunk_size)
             threshold_cnt = 0
             cnt = 0
     return {
@@ -34,7 +34,8 @@ def data_process(threshold, data_len, bin_data):
         'var': var_value,
         'average': average_value,
         'rate_list': rate_list,
-        'total_rate': total_rate
+        'total_rate': total_rate,
+        'chunk_size': chunk_size    
     }
 
 @app.route('/')
@@ -51,12 +52,14 @@ def fetch_data():
     filepath = Path('/Users/huangxin/Desktop/LLMvisualization/Llama3.2') / req_path
     if not filepath.exists():
         return jsonify({'error': 'Path does not exist'}), 404
+    
     result = []
+    threshold = 0.000083
     for file in filepath.glob('*.bin'):
         with file.open('rb') as f:
             shape = np.fromfile(f, dtype='<i4', count=1)
             data = np.fromfile(f, dtype='<f4', count=shape[0])
-            processed_data = data_process(0.000075, shape[0], data)#TODO: threshold should be passed from the frontend
+            processed_data = data_process(threshold, shape[0], data)#TODO: threshold should be passed from the frontend
             result.append({
                 'filename': file.name,
                 'shape': shape.tolist(),
@@ -65,7 +68,8 @@ def fetch_data():
                 'var': float(processed_data['var']),
                 'average': float(processed_data['average']),
                 'rate_list': [float(x) for x in processed_data['rate_list']],
-                'total_rate': float(processed_data['total_rate'])
+                'total_rate': float(processed_data['total_rate']),
+                'chunk_size': int(processed_data['chunk_size'])
             })#must be float, otherwise jsonify will not work
     return jsonify(result)
 
