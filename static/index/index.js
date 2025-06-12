@@ -33,6 +33,7 @@ function loadData() {
     // if(name == 'none')
     //     return;
     let name = "ckpt_test";
+    
     fetch_data({'folder':name});
 }
 

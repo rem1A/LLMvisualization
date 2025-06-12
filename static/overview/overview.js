@@ -18,13 +18,13 @@ class Overview extends BasicView
         super.init();
 
         this.margin.left = 50;
-        this.margin.top = 50;
+        this.margin.top = 50 ;
 
         if(!this.svg){
             this.svg = d3.select('#overview_svg')
             .append('svg')
             .attr('width', this.width)
-            .attr('height', this.height)
+            .attr('height', this.height - 420)
             .append('g');
         }
 
@@ -42,15 +42,22 @@ class Overview extends BasicView
             .style('border-radius', '5px')//圆角
             .style('font-size', '12px')
             .style('pointer-events', 'none');//GPT: 禁止鼠标事件作用于 tooltip 本身。这样鼠标移到 tooltip 上时不会触发其他事件（如 tooltip 消失），避免干扰。
-
-        
+       
+        // GPT: 添加事件监听器，监听 threshold 输入框的变化
+        document.getElementById('threshold-input').addEventListener('change', (e) => {
+        const threshold = parseFloat(e.target.value);
+            if (!isNaN(threshold)) {
+                // 发起新的数据请求，传入 threshold
+                fetch_data({ folder: 'ckpt_test', threshold: threshold });
+            }
+        });
     }   
 
     draw(){
       
         this.init();
 
-        const text = 'Here shows the overview of the tensors, each block represents the difference between the corresponding tensors in the two checkpoints. Click the blocks to see the details of the tensors.';
+        const text = 'Test: Here shows the overview of the tensors, each block represents the difference between the corresponding tensors in the two checkpoints. Click the blocks to see the details of the tensors.';
         overview_view.WrapText(text, this.margin.left - 20, this.margin.top - 20, this.width - this.margin.left - this.margin.right, 1.2);
         const colorScale = d3.scaleLinear()
             .domain([0, 1])
@@ -74,6 +81,8 @@ class Overview extends BasicView
             .attr('height', rectHeight)
             .attr('fill', d=> colorScale(d.total_rate))//gpt code: use colorScale to set the color
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)//平移
+            .attr('stroke', 'black')//边框颜色
+            .attr('stroke-width', 1)//边框宽度
             .on('mouseover', (event, d) => {
                 this.tooltip.html(`Tensor Name: ${d.filename}<br>Tensor Size: ${d.shape[0]}<br>Tensor Rate: ${d.total_rate.toFixed(4)}`)
                     .style('visibility', 'visible');
@@ -90,8 +99,8 @@ class Overview extends BasicView
             })//鼠标移出时tooltip隐藏
             .on('click', (event, d) => {
                 this.svg.selectAll('.rect')
-                    .attr('stroke', null)
-                    .attr('stroke-width', null);
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 1);
 
                 d3.select(event.currentTarget)
                     .attr('stroke', 'red')
