@@ -124,7 +124,7 @@ class DetailView extends BasicView
         const colorbarY = this.margin.top - 15;
         const colorbarWidth = 240;
         const colorbarHeight = 20;
-        this.drawColorBar(colorbarX, colorbarY, colorbarWidth, colorbarHeight);
+        // this.drawColorBar(colorbarX, colorbarY, colorbarWidth, colorbarHeight);
  
         //add text description
         // let testText = 'Test text';
@@ -145,71 +145,23 @@ class DetailView extends BasicView
                 .attr('y', baseY + offsetGrid)
                 .attr('font-size', '14px')
                 .text(dataObject.filename);
+            this.svg.selectAll('text').remove(); // 清除之前的文本
+            this.svg.append('text')
+                .attr('x', baseX + offsetScatter - 100)
+                .attr('y', baseY + rectHeight * 8 + 150)
+                .attr('font-size', '12px')
+                .text(
+                    `Tensor Name: ${dataObject.filename}  ` +
+                    `| Shape: ${dataObject.shape}  ` +
+                    `| Threshold: ${dataObject.threshold}  ` +
+                    `| Rate: ${dataObject.total_rate.toFixed(4)}  ` +
+                    `| Max: ${dataObject.max.toFixed(6)}  ` +
+                    `| Avg: ${dataObject.average.toFixed(6)}`
+                );
             this.drawScatterPlot(dataObject, rectLocs[0].x + offsetScatter, rectLocs[0].y - 50, dataObject.threshold);
         });       
     }
-    // GPT: 绘制分布曲线
-    // d3.scaleLinear()
-    // 创建一个线性比例尺，也就是输入输出成线性映射关系。
-    //  .domain(d3.extent(scatter_plot_data, d => d.x))
-	// •	domain 是输入值的范围（也叫数据空间）。
-	// •	d3.extent() 会自动计算数组中 d.x 的最小值和最大值：
-    // drawScatterPlot(data_object, positionX, positionY, threshold) {
-    //     console.log('ScatterPlot positionX/Y:', positionX, positionY);
-    //     const width = 350;
-    //     const height = 300;
-    //     const xScale = d3.scaleLinear()
-    //         .domain(d3.extent(data_object.scatter_plot_data, d => d.x))
-    //         .range([positionX, positionX + width]);
-    //     const yScale = d3.scaleLinear()
-    //         .domain(d3.extent(data_object.scatter_plot_data, d => d.y))
-    //         .range([positionY + height, positionY]);
 
-    //     // 绘制 X 轴
-    //     this.svg.append('g')
-    //         .attr('class', 'x-axis')
-    //         .attr('transform', `translate(0, ${positionY + height})`)
-    //         .call(d3.axisBottom(xScale).ticks(10).tickFormat(d3.format(".1e")));
-    //     // 绘制 Y 轴
-    //     this.svg.append('g')
-    //         .attr('class', 'y-axis')
-    //         .attr('transform', `translate(${positionX}, 0)`)
-    //         .call(d3.axisLeft(yScale).ticks(10));
-    //     this.svg.selectAll('.dot')
-    //         .data(data_object.scatter_plot_data)
-    //         .enter()
-    //         .append('circle')
-    //         .attr('class', 'dot')
-    //         .attr('cx', d => xScale(d.x))
-    //         .attr('cy', d => yScale(d.y))
-    //         .attr('r', d => {
-    //             if (this.truncate(Math.abs(d.x), 6) >= threshold) {
-    //                 return 5; // 大于阈值的点半径为5
-    //             } else {
-    //                 return 3; // 小于阈值的点半径为3
-    //             }
-    //         })
-    //         .attr('fill', d => {
-    //             if (this.truncate(Math.abs(d.x), 6) >= threshold) {
-    //                 return 'red'; 
-    //             }
-    //             else {
-    //                 return 'blue'; 
-    //             }
-                
-    //         })
-    //         .on('mouseover', (event, d) => {
-    //             this.tooltip.html(`X: ${d.x.toFixed(6)}<br>Y: ${d.y.toFixed(0)}`)
-    //                 .style('visibility', 'visible');
-    //         })
-    //         .on('mousemove', (event, d) => {
-    //             this.tooltip.style('top', (event.pageY - this.height / 3 - 10) + 'px')
-    //                 .style('left', (event.pageX + 10) + 'px');
-    //         })
-    //         .on('mouseout', () => {
-    //             this.tooltip.style('visibility', 'hidden');
-    //         });
-    // }
     drawScatterPlot(data_object, positionX, positionY, threshold) {
         const width = 350;
         const height = 300;
@@ -255,20 +207,23 @@ class DetailView extends BasicView
             .attr('r', d => Math.abs(d.x) >= threshold ? 4 : 3)
             .attr('fill', d => Math.abs(d.x) >= threshold ? 'red' : 'blue')
             .on('mouseover', (event, d) => {
+                const total_element_num = data_object.shape.reduce((a, b) => a * b);
+                const ratio = d.y / total_element_num;
                 this.tooltip
-                    .html(`X: ${d.x.toFixed(6)}<br>Y: ${d.y.toFixed(0)}`)
+                    .html(`X: ${d.x.toFixed(6)}<br>Y: ${d.y.toFixed(0)}<br>Ratio( y / total_element_num): ${ratio.toFixed(3)}`)
                     .style('visibility', 'visible');
             })
             .on('mousemove', (event) => {
                 const scrollTop = document.getElementById('detailview_svg').scrollTop;
                 this.tooltip
-                    .style('top', (event.clientY + scrollTop + 10) + 'px')
+                    .style('top', (event.pageY - this.height * 0.45 - 20)  + 'px')
                     .style('left', (event.clientX + 10) + 'px');
             })
             .on('mouseout', () => {
                 this.tooltip.style('visibility', 'hidden');
             });
     }
+    
     drawRects(data_object, pair, rectWidth, rectHeight, colorScale) {
         this.svg.append('g').selectAll('.rect')
             .data(data_object.rate_list)
@@ -295,7 +250,7 @@ class DetailView extends BasicView
             })
             .on('mousemove', (event, d) => {
                 // this.tooltip.style('top', (event.pageY - this.height / 3 - 10) + 'px')
-                this.tooltip.style('top', (event.pageY - (this.height - 400)/ 3) + 'px')
+                this.tooltip.style('top', (event.pageY - this.height * 0.45 - 20) + 'px')
                     .style('left', (event.pageX + 10) + 'px');
                 console.log('mousemove'); //test
             }) //鼠标移动时tooltip跟随鼠标
@@ -305,13 +260,10 @@ class DetailView extends BasicView
     }
 
     update(msg, data) {
-        // 如果已经存两个，就删除最早的一个
-            this.dataList.unshift(data);
-        
+        this.dataList.unshift(data);
         if (this.dataList.length > 2) {
-            this.dataList.pop(); // 加入新数据
-        }
-        
+            this.dataList.pop(); 
+        }        
         this.draw();
     }
 }

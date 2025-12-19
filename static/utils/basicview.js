@@ -41,4 +41,7 @@ class BasicView {
             }
         }
     }
+    WrapRects(){
+        throw new Error("WrapRects method not implemented in BasicView");
+    }
   }

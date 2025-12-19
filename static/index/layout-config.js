@@ -4,7 +4,7 @@ let config = {
         type: 'column',
         content: [{
             type: 'row',
-            height: 25,
+            height: 90,
             content: [{
                 type: 'component',
                 componentName: 'overview',

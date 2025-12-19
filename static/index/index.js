@@ -29,12 +29,17 @@ layout.init();
 
 // define global start function
 function loadData() {
-    // let name = $('#simulation').val();
-    // if(name == 'none')
-    //     return;
-    let name = "ckpt_test";
-    
-    fetch_data({'folder':name});
+    const folder_name = window.prompt('Enter the folder name to load data:');
+    if (!folder_name) {
+        alert('Please enter a valid folder name.');
+        return;
+    }
+    document.getElementById('folder-input').value = folder_name;
+    fetch_data({'folder':folder_name});
 }
 
-loadData();
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        loadData();
+    }, 300);
+});

@@ -1,14 +1,21 @@
 <!-- <script type="module" src="static/utils/basicview.js"></script>
 <script type="module" src="static/overview/overviewData.js"></script>
 <script type="module" src="static/utils/pubsubscribe.js"></script> -->
-<div id='overview_svg'>
+<!-- <div id='overview_svg'>
     
-</div>
+</div> -->
 <!-- overview.html -->
-<div id="overview_svg" style="position: relative;"></div>
-
-<!-- GPT代码 添加这个输入框 -->
-<div style="margin-left: 20px; margin-top: -20px;">
-    Threshold:
-    <input id="threshold-input" type="number" value="0.0001" step="0.000001" style="width: 100px;" />
+<div id="overview_svg" style="position: absolute; max-height: 3000px; overflow-y: auto; margin-left: 20px; margin-top: 20px;">
+    <div style="margin-left: 20px; margin-top: 20px; margin-right: auto; max-height: 3000px; overflow-y: auto;">
+        Folder Path:
+        <input id="folder-input" type="text" style="width: 100px;"/>
+        Threshold:
+        <input id="threshold-input" type="number" value="0.00001" step="0.000001" style="width: 100px;" />
+        <button id="overview-confirm-btn">Input</button>
+    </div>
 </div>
+
+
+<!-- <div style="margin-left: 20px; margin-bottom: 0%;">
+
+</div> -->
